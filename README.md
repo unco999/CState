@@ -46,3 +46,103 @@ export function SnapshotExtensionTemplate() {
         }
     });
 }
+
+▶️ 可用命令
+save
+保存当前场景快照（单位、技能、Modifier 状态）。
+
+ts
+复制
+编辑
+if (cmd == "save") {
+    SnapshotExtensionTempalte();
+    SaveGameState();
+}
+load
+从保存的快照文件中恢复场景状态。
+
+ts
+复制
+编辑
+if (cmd == "load") {
+    LoadSnap();
+}
+bot <heroname> <lane>
+添加一名敌方 BOT 英雄并分配线路。
+
+ts
+复制
+编辑
+if (cmd == "bot") {
+    if (args[0] == null || args[1] == null) {
+        print("格式不对 格式为 'bot heroname lane'");
+        return;
+    }
+    AddOneBot(DotaTeam.BADGUYS, args[0], args[1]);
+}
+botfull
+快速添加一整队的敌方和友方 BOT 用于测试。
+
+ts
+复制
+编辑
+if (cmd == "botfull") {
+    AddOneBot(DotaTeam.BADGUYS, "npc_dota_hero_axe", "mid");
+    AddOneBot(DotaTeam.BADGUYS, "npc_dota_hero_beastmaster", "mid");
+    AddOneBot(DotaTeam.BADGUYS, "npc_dota_hero_brewmaster", "mid");
+    AddOneBot(DotaTeam.BADGUYS, "npc_dota_hero_bristleback", "mid");
+    AddOneBot(DotaTeam.BADGUYS, "npc_dota_hero_oracle", "mid");
+
+    AddOneBot(DotaTeam.GOODGUYS, "npc_dota_hero_zuus", "mid");
+    AddOneBot(DotaTeam.GOODGUYS, "npc_dota_hero_beastmaster", "mid");
+    AddOneBot(DotaTeam.GOODGUYS, "npc_dota_hero_witch_doctor", "mid");
+    AddOneBot(DotaTeam.GOODGUYS, "npc_dota_hero_winter_wyvern", "mid");
+    AddOneBot(DotaTeam.GOODGUYS, "npc_dota_hero_warlock", "mid");
+}
+📦 建议用法
+你可以将上述命令与测试流程结合，完成以下用途：
+
+快速搭建测试战局（通过 botfull 命令）
+
+捕捉某一时间点场景状态（通过 save 命令）
+
+在状态变更后还原（通过 load 命令）
+
+添加特定单位用于单元测试（通过 bot 命令）
+
+# 🧪 调试命令说明
+
+用于调试和测试的常用命令，可用于保存/加载场景、添加 BOT 等操作。
+
+---
+
+## 📦 可用命令
+
+### 🔹 `save`
+保存当前场景快照，包括单位、技能、Modifier 等完整状态。
+
+---
+
+### 🔹 `load`
+从快照中恢复场景状态，将场景重置为保存时的状态。
+
+---
+
+### 🔹 `bot <heroname> <lane>`
+添加一名敌方 BOT 英雄并指定线路。  
+示例：`bot npc_dota_hero_axe mid`
+
+---
+
+### 🔹 `botfull`
+快速添加一整队敌我双方 BOT 英雄（5v5），常用于快速构建测试战局。
+
+---
+
+## ✅ 推荐使用方式
+
+- 使用 `botfull` 快速搭建一局测试战斗
+- 使用 `save` 捕捉某一时间点的完整状态
+- 使用 `load` 还原保存的状态进行回溯测试
+- 使用 `bot` 添加特定单位进行单元测试
+
