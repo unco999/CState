@@ -148,13 +148,11 @@ export class Debug {
             AddOneBot(DotaTeam.BADGUYS,"npc_dota_hero_beastmaster","mid")
             AddOneBot(DotaTeam.BADGUYS,"npc_dota_hero_brewmaster","mid")
             AddOneBot(DotaTeam.BADGUYS,"npc_dota_hero_bristleback","mid")
-            AddOneBot(DotaTeam.BADGUYS,"npc_dota_hero_oracle","mid")
 
             AddOneBot(DotaTeam.GOODGUYS,"npc_dota_hero_zuus","mid")
             AddOneBot(DotaTeam.GOODGUYS,"npc_dota_hero_beastmaster","mid")
             AddOneBot(DotaTeam.GOODGUYS,"npc_dota_hero_witch_doctor","mid")
             AddOneBot(DotaTeam.GOODGUYS,"npc_dota_hero_winter_wyvern","mid")
-            AddOneBot(DotaTeam.GOODGUYS,"npc_dota_hero_warlock","mid")
         }
 
         if(cmd == "start"){
