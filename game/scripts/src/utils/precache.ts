@@ -21,6 +21,7 @@ export default function Precache(context: CScriptPrecacheContext) {
     // 需要预载入的单位
     precacheUnits(
         [
+            "models/props_structures/tower_good.vmdl",
             // 单位名称
             // 'npc_dota_hero_***',
         ],
