@@ -51,54 +51,6 @@ export function SnapshotExtensionTemplate() {
 save
 保存当前场景快照（单位、技能、Modifier 状态）。
 
-ts
-复制
-编辑
-if (cmd == "save") {
-    SnapshotExtensionTempalte();
-    SaveGameState();
-}
-load
-从保存的快照文件中恢复场景状态。
-
-ts
-复制
-编辑
-if (cmd == "load") {
-    LoadSnap();
-}
-bot <heroname> <lane>
-添加一名敌方 BOT 英雄并分配线路。
-
-ts
-复制
-编辑
-if (cmd == "bot") {
-    if (args[0] == null || args[1] == null) {
-        print("格式不对 格式为 'bot heroname lane'");
-        return;
-    }
-    AddOneBot(DotaTeam.BADGUYS, args[0], args[1]);
-}
-botfull
-快速添加一整队的敌方和友方 BOT 用于测试。
-
-ts
-复制
-编辑
-if (cmd == "botfull") {
-    AddOneBot(DotaTeam.BADGUYS, "npc_dota_hero_axe", "mid");
-    AddOneBot(DotaTeam.BADGUYS, "npc_dota_hero_beastmaster", "mid");
-    AddOneBot(DotaTeam.BADGUYS, "npc_dota_hero_brewmaster", "mid");
-    AddOneBot(DotaTeam.BADGUYS, "npc_dota_hero_bristleback", "mid");
-    AddOneBot(DotaTeam.BADGUYS, "npc_dota_hero_oracle", "mid");
-
-    AddOneBot(DotaTeam.GOODGUYS, "npc_dota_hero_zuus", "mid");
-    AddOneBot(DotaTeam.GOODGUYS, "npc_dota_hero_beastmaster", "mid");
-    AddOneBot(DotaTeam.GOODGUYS, "npc_dota_hero_witch_doctor", "mid");
-    AddOneBot(DotaTeam.GOODGUYS, "npc_dota_hero_winter_wyvern", "mid");
-    AddOneBot(DotaTeam.GOODGUYS, "npc_dota_hero_warlock", "mid");
-}
 📦 建议用法
 你可以将上述命令与测试流程结合，完成以下用途：
 
