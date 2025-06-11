@@ -118,6 +118,9 @@ if (cmd == "botfull") {
 
 ## 📦 可用命令
 
+### 🔹 `start`
+load 会冻结所有单位 需要解除modifier
+
 ### 🔹 `save`
 保存当前场景快照，包括单位、技能、Modifier 等完整状态。
 
