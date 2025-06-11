@@ -1,4 +1,5 @@
 import { AddOneBot, LoadSnap, SaveGameState, SnapshotExtensionTempalte } from '../cstate/snapshot';
+import { EntityFilter } from '../cstate/white_list';
 import { reloadable } from '../utils/tstl-utils';
 import type { EasingFunctionName } from '../utils/tween';
 import { tween } from '../utils/tween';
@@ -132,19 +133,8 @@ export class Debug {
         if(cmd == "save"){
             SnapshotExtensionTempalte()
             SaveGameState();
-            // Timers.CreateTimer(1,()=>{
-            //     LoadSnap();
-            // })
-                    // .forEach((e)=>UTIL_RemoveImmediate(e))
-
-            // Entities.FindAllByClassname("*")
-            //         .filter(filterEntity)
-            //         .filter(filterClassName)
-            //         .forEach(elm=>{
-            //             print("当前需要重载的单位",elm.GetClassname(),"|",elm.GetName())
-            //         })
         }
-        
+
         if(cmd == "bot"){
             if(args[0] == null || args[1] == null){
                 print("格式不对 格式为 'bot heroname lane' ")
@@ -165,6 +155,16 @@ export class Debug {
             AddOneBot(DotaTeam.GOODGUYS,"npc_dota_hero_witch_doctor","mid")
             AddOneBot(DotaTeam.GOODGUYS,"npc_dota_hero_winter_wyvern","mid")
             AddOneBot(DotaTeam.GOODGUYS,"npc_dota_hero_warlock","mid")
+        }
+
+        if(cmd == "start"){
+            Entities.FindAllByClassname("*")
+                    .filter(EntityFilter)
+                    .forEach(elm=>{
+                        if(elm.IsBaseNPC()){
+                            elm.RemoveModifierByName("modifier_free")
+                        }
+                    })
         }
     }
 }
