@@ -1,3 +1,4 @@
+import { AddOneBot, LoadSnap, SaveGameState, SnapshotExtensionTempalte } from '../cstate/snapshot';
 import { reloadable } from '../utils/tstl-utils';
 import type { EasingFunctionName } from '../utils/tween';
 import { tween } from '../utils/tween';
@@ -122,6 +123,48 @@ export class Debug {
 
         if (DebugCallbacks[cmd]) {
             DebugCallbacks[cmd].func(hero, ...args);
+        }
+
+        if(cmd == "load"){
+            LoadSnap()
+        }
+
+        if(cmd == "save"){
+            SnapshotExtensionTempalte()
+            SaveGameState();
+            // Timers.CreateTimer(1,()=>{
+            //     LoadSnap();
+            // })
+                    // .forEach((e)=>UTIL_RemoveImmediate(e))
+
+            // Entities.FindAllByClassname("*")
+            //         .filter(filterEntity)
+            //         .filter(filterClassName)
+            //         .forEach(elm=>{
+            //             print("当前需要重载的单位",elm.GetClassname(),"|",elm.GetName())
+            //         })
+        }
+        
+        if(cmd == "bot"){
+            if(args[0] == null || args[1] == null){
+                print("格式不对 格式为 'bot heroname lane' ")
+                return
+            }
+            AddOneBot(DotaTeam.BADGUYS,args[0],args[1])
+        }
+
+        if(cmd == "botfull"){
+            AddOneBot(DotaTeam.BADGUYS,"npc_dota_hero_axe","mid")
+            AddOneBot(DotaTeam.BADGUYS,"npc_dota_hero_beastmaster","mid")
+            AddOneBot(DotaTeam.BADGUYS,"npc_dota_hero_brewmaster","mid")
+            AddOneBot(DotaTeam.BADGUYS,"npc_dota_hero_bristleback","mid")
+            AddOneBot(DotaTeam.BADGUYS,"npc_dota_hero_oracle","mid")
+
+            AddOneBot(DotaTeam.GOODGUYS,"npc_dota_hero_zuus","mid")
+            AddOneBot(DotaTeam.GOODGUYS,"npc_dota_hero_beastmaster","mid")
+            AddOneBot(DotaTeam.GOODGUYS,"npc_dota_hero_witch_doctor","mid")
+            AddOneBot(DotaTeam.GOODGUYS,"npc_dota_hero_winter_wyvern","mid")
+            AddOneBot(DotaTeam.GOODGUYS,"npc_dota_hero_warlock","mid")
         }
     }
 }

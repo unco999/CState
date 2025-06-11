@@ -5,7 +5,7 @@ import path from 'path';
  * 项目名称
  * 必须为字母开头，而且只能包含小写字母、数字和下划线
  */
-let addon_name: string = 'x_template';
+let addon_name: string = 'c_state';
 
 /**
  * 要加密的项目列表
