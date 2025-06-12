@@ -1,3 +1,4 @@
+import { test } from '../cryso/structs';
 import { AddOneBot, LoadSnap, SaveGameState, SnapshotExtensionTempalte } from '../cstate/snapshot';
 import { EntityFilter } from '../cstate/white_list';
 import { reloadable } from '../utils/tstl-utils';
@@ -163,6 +164,10 @@ export class Debug {
                             elm.RemoveModifierByName("modifier_free")
                         }
                     })
+        }
+
+        if(cmd == "test"){
+            test()
         }
     }
 }
