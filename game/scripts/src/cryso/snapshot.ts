@@ -1531,7 +1531,7 @@ export function LoadSnap() {
         if(overSign.state != "bot"){
             return 0.1
         }
-
+        PauseGame(true)
         Promise.all(BotSnapContainer.get(version).map(snap=>{
             snap.BotSpawn()
         })).then(elm=>{
@@ -1644,7 +1644,6 @@ export function LoadSnap() {
             snap.ptrUid.oldEntityindex = snap.ptrUid.newEntityindex
         })
 
-        PauseGame(true)
 
         collectgarbage("collect")
 

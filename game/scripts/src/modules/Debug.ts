@@ -5,6 +5,7 @@ import { EntityFilter } from '../cryso/white_list';
 import { reloadable } from '../utils/tstl-utils';
 import type { EasingFunctionName } from '../utils/tween';
 import { tween } from '../utils/tween';
+import cryso from '../cryso';
 
 type DebugCallbackFunction = (hero: CDOTA_BaseNPC_Hero, ...args: string[]) => void;
 
@@ -129,12 +130,12 @@ export class Debug {
         }
 
         if(cmd == "load"){
-            LoadSnap()
+            cryso.LoadCryso()
+
         }
 
         if(cmd == "save"){
-            SnapshotExtensionTempalte()
-            SaveGameState();
+            cryso.SaveCryso()
         }
 
         if(cmd == "bot"){
@@ -166,6 +167,7 @@ export class Debug {
                         }
                     })
         }
+
 
         if(cmd == 'reload'){
             
