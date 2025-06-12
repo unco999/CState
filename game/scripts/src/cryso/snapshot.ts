@@ -1531,7 +1531,6 @@ export function LoadSnap() {
         if(overSign.state != "bot"){
             return 0.1
         }
-        PauseGame(true)
         Promise.all(BotSnapContainer.get(version).map(snap=>{
             snap.BotSpawn()
         })).then(elm=>{
@@ -1551,6 +1550,8 @@ export function LoadSnap() {
         if(overSign.state != "ability_r"){
             return 0.1
         }
+        PauseGame(true)
+
         AbilityOrItemSnapContainer.get(version).forEach(snap => {
             snap.restore()
         })
