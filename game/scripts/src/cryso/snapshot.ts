@@ -486,7 +486,11 @@ export interface EntitySnapshotData {
     className: string
     team: DotaTeam
     AbilityPoint: number,
-    is_bot: boolean
+    is_bot: boolean,
+    /**2025 6-13新增 */
+    parent:EntityIndex,
+    local_origin:[number,number,number],
+    local_angle:[number,number,number],
 }
 
 
@@ -519,6 +523,7 @@ export class AbilityOrItemSnapshot {
 
         this.ptrUid.oldEntityindex = entity.GetOwner().entindex()
         this.ptrUid.link.owned = entity.GetOwner().entindex()
+
 
         const origin = entity.GetOrigin()
         this.data.origin = [origin.x, origin.y, origin.z]
@@ -672,6 +677,11 @@ export class EntitySnapshot {
         this.data.entIndex = entity.entindex()
         this.data.model = entity.GetModelName()
         this.data.map_name = entity.GetName()
+        this.data.parent = entity.GetRootMoveParent().entindex()
+        const loacl_origin = entity.GetLocalOrigin()
+        const loacl_angles = entity.GetLocalAngles()
+        this.data.local_angle = [loacl_angles.x,loacl_angles.y,loacl_angles.z]
+        this.data.local_origin = [loacl_origin.x,loacl_origin.y,loacl_origin.z]
         uidManager.oldEntityRegister(entity.entindex(), this.uidPtr)
         EntitySnapshotExtensionManager.applyCapture(entity, this.data)
         return this
@@ -817,6 +827,45 @@ export class EntitySnapshot {
                 EntitySnapshotExtensionManager.applyRestore(newEntity, this.data)
                 return
             }
+    }
+
+    /**
+     * 动态组件创造
+     */
+    public PrePropDynamicSpawn(){
+        if (this.data.className == "porp_dnamic") {
+            const playerID = this.data.PlayerID;
+            const unitname = this.data.raw_name
+            const angle = VectorAngles(Vector(this.data.facing[0],this.data.facing[1],this.data.facing[2]))
+            const p1 = SpawnEntityFromTableSynchronous("prop_dynamic", {
+                model: this.data.model,
+                origin: `${this.data.origin[0]} ${this.data.origin[1]} ${this.data.origin[2]}`,
+                scales: "1 1 1",
+                angles: `${angle.x} ${angle.y} ${angle.z}`
+            }) as CBaseModelEntity
+            this.uidPtr.newEntityindex = p1.entindex()
+            uidManager.newEntityRegister(p1.entindex(), this.uidPtr)
+            EntitySnapshotExtensionManager.applyRestore(p1, this.data)
+        }
+    }
+
+    public PostPorpDynamicSpawn(){
+        if (this.data.className == "porp_dnamic") {
+            const me = EntIndexToHScript(this.uidPtr.newEntityindex)
+            if(this.data.parent){
+                const parent_uidptr = uidManager.oldEntityFindUidPtr(this.data.parent)
+                if(parent_uidptr.newEntityindex){
+                    const parent = EntIndexToHScript(parent_uidptr.newEntityindex)
+                    if(IsValidEntity(parent)){
+                        me.SetParent(parent,"")
+                        me.SetLocalAngles(this.data.local_angle[0],this.data.local_angle[1],this.data.local_angle[2])
+                        me.SetLocalOrigin(Vector(this.data.local_origin[0],this.data.local_origin[1],this.data.local_origin[2]))
+                    }else{
+                        print("错误 父级没有找到")
+                    }
+                }
+            }
+        }
     }
 
     public HeroSpawn() {
@@ -996,11 +1045,11 @@ class uidManager {
     }
 }
 
-const BotSnapContainer:Map<version,EntitySnapshot[]> = new Map()
-const heroPlayerSnapContainer:Map<version,EntitySnapshot[]> = new Map()
-const EntitySnapContainer: Map<version, EntitySnapshot[]> = new Map()
-const AbilityOrItemSnapContainer: Map<version, AbilityOrItemSnapshot[]> = new Map()
-
+export const BotSnapContainer:Map<version,EntitySnapshot[]> = new Map()
+export const heroPlayerSnapContainer:Map<version,EntitySnapshot[]> = new Map()
+export const EntitySnapContainer: Map<version, EntitySnapshot[]> = new Map()
+export const AbilityOrItemSnapContainer: Map<version, AbilityOrItemSnapshot[]> = new Map()
+export const PropDynamicContainer:Map<version,EntitySnapshot[]> = new Map()
 
 export function RegisterLogicId(uid: uid, EntitySnapshot: EntitySnapshot) {
     try {
@@ -1401,11 +1450,13 @@ export function SaveGameState() {
     EntitySnapContainer.clear()
     AbilityOrItemSnapContainer.clear()
     heroPlayerSnapContainer.clear()
+    PropDynamicContainer.clear()
     BotSnapContainer.clear()
     EntitySnapContainer.set(version, [])
     AbilityOrItemSnapContainer.set(version, [])
     heroPlayerSnapContainer.set(version,[])
     BotSnapContainer.set(version,[])
+    PropDynamicContainer.set(version,[])
 
     GlobalConfigSave.capStore(() => {
         const BADGUYS = PlayerResource.GetPlayerCountForTeam(DotaTeam.BADGUYS)
@@ -1422,10 +1473,17 @@ export function SaveGameState() {
     const abilityOrItem_ptr = AbilityOrItemSnapContainer.get(version)
     const heroConatiner_ptr = heroPlayerSnapContainer.get(version)
     const bot_ptr = BotSnapContainer.get(version)
+    const prop_ptr = PropDynamicContainer.get(version)
 
 
     entities
         .forEach(ent => {
+            if(ent.GetClassname() == "prop_dynamic"){
+                const snap = EntitySnapshot.build().Precapture(ent)
+                prop_ptr.push(snap)
+                return
+            }
+
             if (ent.IsInstance(CDOTA_Item) || ent.IsInstance(CDOTABaseAbility)) {
                 if (ent.IsInstance(CDOTABaseAbility)) {
                     if (Speciel.has(ent.GetAbilityName())) {
@@ -1447,6 +1505,7 @@ export function SaveGameState() {
                 }
                 container_ptr.push(snap)
             }
+
 
 
         })
@@ -1471,14 +1530,14 @@ export function SaveGameState() {
 }
 
 
-const overSign:{state:"none"|"hero"|"bot"|"ability_r"|"modifier_r"|"build_link"|"reset"} = {"state":"none"}
+const overSign:{state:"none"|"prop_dynamic"|"hero"|"bot"|"ability_r"|"modifier_r"|"build_link"|"reset"} = {"state":"none"}
 
 export function LoadSnap() {
     overSign.state = "none"
 
     
     GameRules.SetCustomGameTeamMaxPlayers(DotaTeam.BADGUYS, 12)
-    GameRules.SetCustomGameTeamMaxPlayers(DotaTeam.GOODGUYS, 24)
+    GameRules.SetCustomGameTeamMaxPlayers(DotaTeam.GOODGUYS, 12)
 
     Entities.FindAllByClassname("*")
     .filter(EntityFilter)
@@ -1492,14 +1551,14 @@ export function LoadSnap() {
     
     for(let i = -1 ; i < 30 ; i++){
         const player = PlayerResource.GetPlayer(i as PlayerID)
-        GameRules.ResetPlayer(i)
         DisconnectClient(i as PlayerID,true)
         GameRules.RemoveFakeClient(i as PlayerID)
+        GameRules.ResetPlayer(i)
     }
 
-        EntitySnapContainer.get(version).forEach(snap => {
-            snap.buildSpawn()
-        })
+    EntitySnapContainer.get(version).forEach(snap => {
+        snap.buildSpawn()
+    })
 
     GameRules.GetGameModeEntity().SetThink(() => {
         heroPlayerSnapContainer.get(version).forEach(snap=>{
@@ -1596,11 +1655,24 @@ export function LoadSnap() {
         good.forEach(newEntity => {
             GoodConnet[newEntity.GetName()]?.fn(newEntity as CDOTA_BaseNPC_Building)
         })
-       overSign.state = "reset"
+       overSign.state = "prop_dynamic"
         return null
     }, undefined, DoUniqueString("time"), 2.3)
 
+    GameRules.GetGameModeEntity().SetThink(() => {
+        if(overSign.state != "prop_dynamic"){
+            return 0.1
+        }
+        
+        PropDynamicContainer.get(version).forEach(snap=>{
+            snap.PrePropDynamicSpawn()
+        })
+        PropDynamicContainer.get(version).forEach(snap=>{
+            snap.PostPorpDynamicSpawn()
+        })
 
+        overSign.state = "reset"
+    }, undefined, DoUniqueString("time"), 2.3)
 
     GameRules.GetGameModeEntity().SetThink(() => {
         if(overSign.state != "reset"){
