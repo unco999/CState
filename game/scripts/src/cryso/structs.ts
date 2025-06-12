@@ -1,4 +1,3 @@
-import { float01, link } from "../cstate/main";
 
 // ================= 基础结构 =================
 function simpleDebugWarring(message: string) {
@@ -7,12 +6,118 @@ function simpleDebugWarring(message: string) {
     Warning(`source:${debug.getinfo(4).short_src} line:${debug.getinfo(4).currentline} pop!`);
 }
 
+interface UnitTimerData {
+    entityId: EntityIndex;        // 绑定单位
+    fnName: string;               // 定时器逻辑的注册名
+    interval: number;             // 总时间
+    remaining?: number;            // 剩余时间
+    repeat: boolean;              // 是否重复
+    args?: any;                   // 附加参数，可选
+}
+
+type TimerFunction = (entityId: EntityIndex, args?: any) => void;
+
+class TimerRegistry {
+    private static fnMap: Record<string, TimerFunction> = {};
+
+    static register(name: string, fn: TimerFunction) {
+        this.fnMap[name] = fn;
+    }
+
+    static get(name: string): TimerFunction | undefined {
+        return this.fnMap[name];
+    }
+}
+
+
+
+export class UnitTimerSystem {
+    private timers: UnitTimerData[] = [];
+    private static instance: UnitTimerSystem;
+
+    // 添加单例访问方法
+    static Get(): UnitTimerSystem {
+        if (!UnitTimerSystem.instance) {
+            UnitTimerSystem.instance = new UnitTimerSystem();
+        }
+        return UnitTimerSystem.instance;
+    }
+
+
+    add(timer: UnitTimerData) {
+        this.timers.push(timer);
+        this.Start(timer)
+    }
+
+    tick(dt: number) {
+        for (const timer of this.timers) {
+            timer.remaining -= dt;
+            if (timer.remaining <= 0) {
+                const fn = TimerRegistry.get(timer.fnName);
+                if (fn) {
+                    fn(timer.entityId, timer.args);
+                }
+
+                if (timer.repeat) {
+                    timer.remaining = timer.interval;
+                } else {
+                    // 单次定时器移除
+                    this.timers = this.timers.filter(t => t !== timer);
+                }
+            }
+        }
+    }
+
+    // 序列化所有 timer
+    serialize(): UnitTimerData[] {
+        return this.timers;
+    }
+
+    public Start(timer:UnitTimerData){
+        const ent = EntIndexToHScript(timer.entityId) as CDOTA_BaseNPC;
+    
+        if (!IsValidEntity(ent)) return;
+
+        // 注册单位上的 Think 回调
+        const thinkFunc = () => {
+            const fn = TimerRegistry.get(timer.fnName);
+            if (fn) {
+                fn(timer.entityId, timer.args);
+            }
+
+            if (timer.repeat) {
+                // 重复，重新设置 remaining
+                timer.remaining = timer.interval;
+                return timer.interval; // 再次调用间隔时间
+            } else {
+                // 单次执行完移除
+                this.timers = this.timers.filter(t => t !== timer);
+                return undefined; // 不再调用
+            }
+        };
+
+        ent.SetThink(thinkFunc, undefined,DoUniqueString("timer"),undefined);
+    }
+
+    deserialize(data: UnitTimerData[]) {
+        this.timers = [...data];
+    
+        this.timers.forEach(timer => {
+            this.Start(timer)
+        });
+    }
+    
+}
+
+
+
 export class SceneSerializer {
     static serialize(): string {
         const state = {
             system: SystemContainer.Get().toJSON(),
             triggers: TriggerController.Get().toJSON(),
-            scheduler: TriggerController.Get().getScheduler()?.toJSON()
+            scheduler: TriggerController.Get().getScheduler()?.toJSON(),
+            unitTimers: UnitTimerSystem.Get().serialize() // 新增序列化单位计时器
         };
         return JSON.encode(state);
     }
@@ -42,6 +147,11 @@ export class SceneSerializer {
         if (state.scheduler) {
             const scheduler = Scheduler.fromJSON(state.scheduler, triggerMap);
             TriggerController.Get().setScheduler(scheduler);
+        }
+        
+        // 新增：重建单位计时器
+        if (state.unitTimers) {
+            UnitTimerSystem.Get().deserialize(state.unitTimers);
         }
         
         // 解析所有引用
@@ -624,7 +734,6 @@ function ref(target: UID | DataSet | (() => UID)): UID {
 
 type UID = string;
 type TagName = string; // 简化为字符串类型
-type EntityIndex = number; // 实体索引类型
 
 interface Tag {
     // 标签接口（可根据需要扩展）
@@ -1685,6 +1794,19 @@ export function test() {
     playersWithArmor.forEach(e => {
         print(e.get<number>("level"))
     })
+
+    TimerRegistry.register("ttt",(entindex,)=>{
+        print("当前我的entity",entindex)
+    })
+
+    UnitTimerSystem.Get().add({
+        interval:5,
+        entityId:HeroList.GetHero(0).entindex(),
+        fnName:"ttt",
+        repeat:true
+    })
+
+
 
 
     const currentState = SceneSerializer.serialize();

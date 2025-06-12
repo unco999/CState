@@ -1,6 +1,7 @@
+import { LoadSnap, SnapshotExtensionTempalte, SaveGameState, AddOneBot } from '../cryso/snapshot';
 import { test } from '../cryso/structs';
-import { AddOneBot, LoadSnap, SaveGameState, SnapshotExtensionTempalte } from '../cstate/snapshot';
-import { EntityFilter } from '../cstate/white_list';
+import { EntityFilter } from '../cryso/white_list';
+
 import { reloadable } from '../utils/tstl-utils';
 import type { EasingFunctionName } from '../utils/tween';
 import { tween } from '../utils/tween';
@@ -164,6 +165,10 @@ export class Debug {
                             elm.RemoveModifierByName("modifier_free")
                         }
                     })
+        }
+
+        if(cmd == 'reload'){
+            
         }
 
         if(cmd == "test"){

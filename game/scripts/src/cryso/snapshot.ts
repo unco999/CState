@@ -190,8 +190,8 @@ export namespace Tool{
 
 import { BaseModifier, registerModifier } from "../utils/dota_ts_adapter";
 import { reloadable } from "../utils/tstl-utils";
-import { blackList, classBlackList } from "./black_list";
 import { EntityFilter, Speciel } from "./white_list";
+
 
 
 @registerModifier()
@@ -245,6 +245,8 @@ export function AddOneBot(team: DotaTeam, heroName: string, lane: string, diffic
 
 
 }
+
+
 export function SnapshotExtensionTempalte() {
 
 
