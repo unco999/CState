@@ -1,11 +1,13 @@
 import { Debug } from './Debug';
 import { GameConfig } from './GameConfig';
 import { XNetTable } from '../utils/xnet-table';
+import { UIDManager } from '../cryso/snapshot';
 
 declare global {
     interface CDOTAGameRules {
         // 声明所有的GameRules模块，这个主要是为了方便其他地方的引用（保证单例模式）
         XNetTable: XNetTable;
+        UIDManager:UIDManager
     }
 }
 
@@ -21,5 +23,7 @@ export function ActivateModules() {
         new GameConfig();
         // 初始化测试模块xD
         new Debug();
+
+        GameRules.UIDManager = new UIDManager()
     }
 }

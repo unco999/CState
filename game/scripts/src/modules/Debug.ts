@@ -134,8 +134,28 @@ export class Debug {
 
         }
 
+        if(cmd == "weapon"){
+            const p1 = SpawnEntityFromTableSynchronous("prop_dynamic", {
+                model: "maps/cavern_assets/models/crystals/crystal05.vmdl",
+                origin: `0 0 0`,
+                scales: "1 1 1",
+                angles: `0 0 0`
+            }) as CBaseModelEntity
+            p1.SetParent(HeroList.GetHero(0),"attach_weapon")
+            p1.FollowEntityMerge(HeroList.GetHero(0),"attach_weapon")
+        }
+
         if(cmd == "save"){
             cryso.SaveCryso()
+        }
+
+        if(cmd == "draw"){
+            Entities.FindAllByClassname("*")
+                    .forEach(elm=>{
+                        if(elm.IsBaseNPC() || elm.GetClassname() == "prop_dynamic"){
+                            DebugDrawText(elm.GetOrigin(),`${elm.entindex()}|${elm.GetClassname()}|${elm.GetName()}`,true,9999)
+                        }
+                    })
         }
 
         if(cmd == "bot"){

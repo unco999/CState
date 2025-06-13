@@ -28,7 +28,7 @@ export class GameConfig {
         game.SetDaynightCycleDisabled(true); // 是否禁用白天黑夜循环
         game.SetForceRightClickAttackDisabled(true); // 是否禁用右键攻击
         game.SetHudCombatEventsDisabled(true); // 是否禁用战斗事件（左下角的战斗消息）
-        game.SetCustomGameForceHero(`npc_dota_hero_phoenix`); // 设置强制英雄（会直接跳过英雄选择阶段并直接为所有玩家选择这个英雄）
+        game.SetCustomGameForceHero(`npc_dota_hero_sven`); // 设置强制英雄（会直接跳过英雄选择阶段并直接为所有玩家选择这个英雄）
         // game.SetUseCustomHeroLevels(true); // 是否启用自定义英雄等级
         // game.SetCustomHeroMaxLevel(1); // 设置自定义英雄最大等级
         // game.SetCustomXPRequiredToReachNextLevel({

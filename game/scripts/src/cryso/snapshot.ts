@@ -320,12 +320,12 @@ export class ModifierSnapshot {
 
             let casterUidPtr: UidPtr
             if (caster) {
-                casterUidPtr = uidManager.oldEntityFindUidPtr(caster.entindex())
+                casterUidPtr = GameRules.UIDManager.oldEntityFindUidPtr(caster.entindex())
             } else {
-                casterUidPtr = uidManager.oldEntityFindUidPtr(modifier.GetParent().entindex())
+                casterUidPtr = GameRules.UIDManager.oldEntityFindUidPtr(modifier.GetParent().entindex())
             }
 
-            const parentUidPtr = uidManager.oldEntityFindUidPtr(modifier.GetParent().entindex())
+            const parentUidPtr = GameRules.UIDManager.oldEntityFindUidPtr(modifier.GetParent().entindex())
 
             parentUidPtr.link.owned = modifier.GetParent().entindex()
             parentUidPtr.link.caster = caster.entindex()
@@ -488,7 +488,8 @@ export interface EntitySnapshotData {
     AbilityPoint: number,
     is_bot: boolean,
     /**2025 6-13新增 */
-    parent:EntityIndex,
+    parent:{SetParent:{parent:EntityIndex,attach:string}},
+    FollowEntityMergeGet:{GetFollowEntityMerge:{parent:EntityIndex,attach:string}},
     local_origin:[number,number,number],
     local_angle:[number,number,number],
 }
@@ -533,7 +534,7 @@ export class AbilityOrItemSnapshot {
         this.data.facing = [forward.x, forward.y, forward.z]
         this.data.name = entity.GetAbilityName()
         this.data.owned = entity.GetOwner().entindex()
-        uidManager.oldEntityRegister(entity.entindex(), this.ptrUid)
+        GameRules.UIDManager.oldEntityRegister(entity.entindex(), this.ptrUid)
         return this
     }
 
@@ -545,7 +546,7 @@ export class AbilityOrItemSnapshot {
         let owned: CDOTA_BaseNPC_Hero
         let playerID: PlayerID
         let player: CDOTAPlayerController
-        const owned_ptr = uidManager.oldEntityFindUidPtr(this.ptrUid.oldEntityindex)
+        const owned_ptr = GameRules.UIDManager.oldEntityFindUidPtr(this.ptrUid.oldEntityindex)
 
         if (owned_ptr && owned_ptr.newEntityindex) {
             owned = EntIndexToHScript(owned_ptr.newEntityindex) as CDOTA_BaseNPC_Hero
@@ -576,7 +577,7 @@ export class AbilityOrItemSnapshot {
                 CreateItemOnPositionForLaunch(Vector(this.data.origin[0], this.data.origin[1], this.data.origin[2]), item)
             }
             this.ptrUid.newEntityindex = item.entindex()
-            uidManager.newEntityRegister(item.entindex(), this.ptrUid)
+            GameRules.UIDManager.newEntityRegister(item.entindex(), this.ptrUid)
         } else {
 
             if (owned.IsBaseNPC() == false) return;
@@ -599,7 +600,7 @@ export class AbilityOrItemSnapshot {
                 ability.ToggleAutoCast()
             }
             this.ptrUid.newEntityindex = ability.entindex()
-            uidManager.newEntityRegister(ability.entindex(), this.ptrUid)
+            GameRules.UIDManager.newEntityRegister(ability.entindex(), this.ptrUid)
         }
 
     }
@@ -677,12 +678,14 @@ export class EntitySnapshot {
         this.data.entIndex = entity.entindex()
         this.data.model = entity.GetModelName()
         this.data.map_name = entity.GetName()
-        this.data.parent = entity.GetRootMoveParent().entindex()
+        this.data.FollowEntityMergeGet = Object.assign({},entity["FollowEntityMergeGet"])
+        this.data.parent = Object.assign({},entity["GetParent"])
         const loacl_origin = entity.GetLocalOrigin()
         const loacl_angles = entity.GetLocalAngles()
         this.data.local_angle = [loacl_angles.x,loacl_angles.y,loacl_angles.z]
         this.data.local_origin = [loacl_origin.x,loacl_origin.y,loacl_origin.z]
-        uidManager.oldEntityRegister(entity.entindex(), this.uidPtr)
+        this.uidPtr.oldEntityindex = entity.entindex()
+        GameRules.UIDManager.oldEntityRegister(entity.entindex(), this.uidPtr)
         EntitySnapshotExtensionManager.applyCapture(entity, this.data)
         return this
     }
@@ -719,7 +722,6 @@ export class EntitySnapshot {
             }
     
             npc.SetAbsOrigin(Vector(this.data.origin[0], this.data.origin[1], this.data.origin[2]))
-            print("给机器人",npc.GetPlayerOwnerID(),"设置了坐标",npc.GetOrigin())
             npc.SetForwardVector(Vector(this.data.facing[0], this.data.facing[1], this.data.facing[2]))
             npc.SetHealth(this.data.health)
             npc.SetMana(this.data.mana)
@@ -740,7 +742,7 @@ export class EntitySnapshot {
                     this.SetAttribute(hero)
                     this.data.newSpawnEntity = hero.entindex()
                     this.uidPtr.newEntityindex = hero.entindex()
-                    uidManager.newEntityRegister(hero.entindex(), this.uidPtr)
+                    GameRules.UIDManager.newEntityRegister(hero.entindex(), this.uidPtr)
                     EntitySnapshotExtensionManager.applyRestore(hero, this.data)
                     hero.AddNewModifier(hero,null,modifier_free.name,{duration:-1})
                     res(this.data.PlayerID)
@@ -768,7 +770,7 @@ export class EntitySnapshot {
                 newEntity.SetInitialGoalEntity(path)
                 this.SetAttribute(newEntity)
                 this.uidPtr.newEntityindex = newEntity.entindex()
-                uidManager.newEntityRegister(newEntity.entindex(), this.uidPtr)
+                GameRules.UIDManager.newEntityRegister(newEntity.entindex(), this.uidPtr)
                 EntitySnapshotExtensionManager.applyRestore(newEntity, this.data)
                 newEntity.AddNewModifier(newEntity,null,modifier_free.name,{duration:-1})
                 return
@@ -795,7 +797,7 @@ export class EntitySnapshot {
                 newEntity.SetForwardVector(Vector(this.data.facing[0], this.data.facing[1], this.data.facing[2]))
                 newEntity.RemoveAllModifiers(2,false,false,false)
                 this.uidPtr.newEntityindex = newEntity.entindex()
-                uidManager.newEntityRegister(newEntity.entindex(), this.uidPtr)
+                GameRules.UIDManager.newEntityRegister(newEntity.entindex(), this.uidPtr)
                 EntitySnapshotExtensionManager.applyRestore(newEntity, this.data)
                 return
             }
@@ -823,7 +825,7 @@ export class EntitySnapshot {
                 newEntity.SetForwardVector(Vector(this.data.facing[0], this.data.facing[1], this.data.facing[2]))
                 newEntity.RemoveAllModifiers(2,false,false,false)
                 this.uidPtr.newEntityindex = newEntity.entindex()
-                uidManager.newEntityRegister(newEntity.entindex(), this.uidPtr)
+                GameRules.UIDManager.newEntityRegister(newEntity.entindex(), this.uidPtr)
                 EntitySnapshotExtensionManager.applyRestore(newEntity, this.data)
                 return
             }
@@ -833,7 +835,7 @@ export class EntitySnapshot {
      * 动态组件创造
      */
     public PrePropDynamicSpawn(){
-        if (this.data.className == "porp_dnamic") {
+        if (this.data.className == "prop_dynamic") {
             const playerID = this.data.PlayerID;
             const unitname = this.data.raw_name
             const angle = VectorAngles(Vector(this.data.facing[0],this.data.facing[1],this.data.facing[2]))
@@ -844,20 +846,28 @@ export class EntitySnapshot {
                 angles: `${angle.x} ${angle.y} ${angle.z}`
             }) as CBaseModelEntity
             this.uidPtr.newEntityindex = p1.entindex()
-            uidManager.newEntityRegister(p1.entindex(), this.uidPtr)
+            GameRules.UIDManager.newEntityRegister(p1.entindex(), this.uidPtr)
             EntitySnapshotExtensionManager.applyRestore(p1, this.data)
         }
     }
 
     public PostPorpDynamicSpawn(){
-        if (this.data.className == "porp_dnamic") {
+        if (this.data.className == "prop_dynamic") {
             const me = EntIndexToHScript(this.uidPtr.newEntityindex)
-            if(this.data.parent){
-                const parent_uidptr = uidManager.oldEntityFindUidPtr(this.data.parent)
-                if(parent_uidptr.newEntityindex){
+            if(this.data.parent != null){
+                GameRules.UIDManager.toJsonDebug()
+                print("机上打印")
+                const parent_uidptr = GameRules.UIDManager.oldEntityFindUidPtr(this.data.parent.SetParent.parent)
+                print("parent_uidptr")
+                DeepPrintTable(parent_uidptr)
+                if(parent_uidptr?.newEntityindex != null){
                     const parent = EntIndexToHScript(parent_uidptr.newEntityindex)
+                    print("开始里面的")
+
                     if(IsValidEntity(parent)){
-                        me.SetParent(parent,"")
+                    print("开始里面的","sdsdsdsddsd")
+
+                        me.SetParent(parent,this.data.parent.SetParent.attach)
                         me.SetLocalAngles(this.data.local_angle[0],this.data.local_angle[1],this.data.local_angle[2])
                         me.SetLocalOrigin(Vector(this.data.local_origin[0],this.data.local_origin[1],this.data.local_origin[2]))
                     }else{
@@ -865,6 +875,23 @@ export class EntitySnapshot {
                     }
                 }
             }
+        }
+
+        if(this.data.FollowEntityMergeGet != null){
+            const me = EntIndexToHScript(this.uidPtr.newEntityindex)
+            const parent = this.data.FollowEntityMergeGet?.GetFollowEntityMerge?.parent
+            if(parent != null){
+                const follow_uidptr = GameRules.UIDManager.oldEntityFindUidPtr(parent)
+                print("靠北了",follow_uidptr)
+
+                if(follow_uidptr?.newEntityindex){
+                    const parent = EntIndexToHScript(follow_uidptr.newEntityindex)
+                    if(IsValidEntity(parent)){
+                        me.FollowEntityMerge(parent,this.data.FollowEntityMergeGet.GetFollowEntityMerge.attach)
+                    }
+                }
+            }
+           
         }
     }
 
@@ -891,7 +918,7 @@ export class EntitySnapshot {
                             this.SetAttribute(hero)
                             this.data.newSpawnEntity = hero.entindex()
                             this.uidPtr.newEntityindex = hero.entindex()
-                            uidManager.newEntityRegister(hero.entindex(), this.uidPtr)
+                            GameRules.UIDManager.newEntityRegister(hero.entindex(), this.uidPtr)
                             EntitySnapshotExtensionManager.applyRestore(hero, this.data)
                             res(hero.GetPlayerID())
                             hero.AddNewModifier(hero,null,modifier_free.name,{duration:-1})
@@ -1017,32 +1044,48 @@ class UidPtr {
 
 }
 
-class uidManager {
-    static PtrToUid: Map<EntityIndex, UidPtr> = new Map()
+export class UIDManager {
+    PtrToUid: Map<EntityIndex, UidPtr> = new Map()
 
-    static oldEntityFindUidPtr(entindex: EntityIndex) {
-        const ptr = this.PtrToUid.get(entindex)
-        if (ptr == null) {
-            return
-        }
-        return ptr
-    }
 
-    static newEntityFindUidPtr(entindex: EntityIndex) {
-        const ptr = this.PtrToUid.get(entindex)
-        if (ptr == null) {
-            return
-        }
-        return ptr
-    }
+   constructor(){
 
-    static oldEntityRegister(entindex: EntityIndex, uidPtr: UidPtr) {
-        const ptr = this.PtrToUid.set(entindex, uidPtr)
-    }
+   }
 
-    static newEntityRegister(entindex: EntityIndex, uidPtr: UidPtr) {
-        const ptr = this.PtrToUid.set(entindex, uidPtr)
-    }
+    oldEntityFindUidPtr(entindex: EntityIndex) {
+       const ptr = this.PtrToUid.get(Number(entindex) as EntityIndex)
+       print(ptr,"当前查找entity",entindex)
+       if (ptr == null) {
+           return
+       }
+       return ptr
+   }
+
+    newEntityFindUidPtr(entindex: EntityIndex) {
+       const ptr = this.PtrToUid.get(Number(entindex) as EntityIndex)
+       if (ptr == null) {
+           return
+       }
+       return ptr
+   }
+
+    toJsonDebug(){
+       this.PtrToUid.forEach((elm,key)=>{
+           DeepPrintTable({new:elm.newEntityindex,old:elm.oldEntityindex,key})
+       })
+   }
+
+    oldEntityRegister(entindex: EntityIndex, uidPtr: UidPtr) {
+       this.PtrToUid.set(Number(entindex) as EntityIndex, uidPtr)
+       print("旧ID注册",entindex,uidPtr)
+   }
+
+    newEntityRegister(entindex: EntityIndex, uidPtr: UidPtr) {
+       this.PtrToUid.set(Number(entindex) as EntityIndex, uidPtr)
+       DeepPrintTable({entindex,a:uidPtr.newEntityindex,b:uidPtr.oldEntityindex})
+       print("新ID注册",entindex,uidPtr)
+
+   }
 }
 
 export const BotSnapContainer:Map<version,EntitySnapshot[]> = new Map()
@@ -1663,7 +1706,9 @@ export function LoadSnap() {
         if(overSign.state != "prop_dynamic"){
             return 0.1
         }
-        
+        print("新旧指针指引表")
+        GameRules.UIDManager.toJsonDebug()
+
         PropDynamicContainer.get(version).forEach(snap=>{
             snap.PrePropDynamicSpawn()
         })
@@ -1717,8 +1762,9 @@ export function LoadSnap() {
             snap.ptrUid.oldEntityindex = snap.ptrUid.newEntityindex
         })
 
+        print("充值完毕")
 
-        collectgarbage("collect")
+        collectgarbage("collect")   
 
         GlobalConfigSave.Reload()
         return null

@@ -7,7 +7,9 @@ export default function Precache(context: CScriptPrecacheContext) {
             // '***.vpcf',
             // 'soundevents/game_sounds_heroes/game_sounds_queenofpain.vsndevts',
             // '***.vmdl',
+            "models/heroes/antimage/antimage_offhand_weapon.vmdl",
             "models/props_structures/tower_good.vmdl",
+            "maps/cavern_assets/models/crystals/crystal05.vmdl",
         ],
         context
     );
@@ -22,7 +24,7 @@ export default function Precache(context: CScriptPrecacheContext) {
     // 需要预载入的单位
     precacheUnits(
         [
-            "models/props_structures/tower_good.vmdl",
+            "npc_dota_hero_sven"
             // 单位名称
             // 'npc_dota_hero_***',
         ],
