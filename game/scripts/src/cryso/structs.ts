@@ -33,14 +33,9 @@ class TimerRegistry {
 
 export class UnitTimerSystem {
     private timers: UnitTimerData[] = [];
-    private static instance: UnitTimerSystem;
 
-    // 添加单例访问方法
-    static Get(): UnitTimerSystem {
-        if (!UnitTimerSystem.instance) {
-            UnitTimerSystem.instance = new UnitTimerSystem();
-        }
-        return UnitTimerSystem.instance;
+    constructor(){
+        
     }
 
 
@@ -114,10 +109,10 @@ export class UnitTimerSystem {
 export class SceneSerializer {
     static serialize(): string {
         const state = {
-            system: SystemContainer.Get().toJSON(),
+            system: GameRules.SystemContainer.toJSON(),
             triggers: TriggerController.Get().toJSON(),
             scheduler: TriggerController.Get().getScheduler()?.toJSON(),
-            unitTimers: UnitTimerSystem.Get().serialize() // 新增序列化单位计时器
+            unitTimers: GameRules.UnitTimerSystem.serialize() // 新增序列化单位计时器
         };
         return JSON.encode(state);
     }
@@ -126,13 +121,13 @@ export class SceneSerializer {
         const state = JSON.decode(jsonString);
         
         // 重置系统
-        SystemContainer.Get().reset();
+        GameRules.SystemContainer.reset();
         TriggerController.Get().reset();
         
         // 重建数据集
         state.system.dataSets.forEach((dsData: any) => {
             const ds = DataSet.fromJSON(dsData);
-            SystemContainer.Get().registerDataSet(ds.id, ds);
+            GameRules.SystemContainer.registerDataSet(ds.id, ds);
         });
         
         // 重建触发器
@@ -151,7 +146,7 @@ export class SceneSerializer {
         
         // 新增：重建单位计时器
         if (state.unitTimers) {
-            UnitTimerSystem.Get().deserialize(state.unitTimers);
+            GameRules.UnitTimerSystem.deserialize(state.unitTimers);
         }
         
         // 解析所有引用
@@ -564,7 +559,7 @@ export class TriggerController {
     }
 
     resolveReferences(): void {
-        const system = SystemContainer.Get();
+        const system = GameRules.SystemContainer;
         this.triggers.forEach(trigger => {
             trigger.resolveReferences(system);
         });
@@ -616,7 +611,7 @@ export class TriggerController {
     private processDirtyDataSets(): void {
         if (this.dirtyDataSets.size === 0) return;
 
-        const system = SystemContainer.Get();
+        const system = GameRules.SystemContainer;
         const dirtyDataSets: DataSet[] = [];
 
         // 获取所有脏数据集实例
@@ -720,7 +715,7 @@ function ref(target: UID | DataSet | (() => UID)): UID {
         return target;
     } else if (target instanceof DataSet) {
         // 自动注册数据集到系统容器
-        const system = SystemContainer.Get();
+        const system = GameRules.SystemContainer;
         if (!system.getDataSetByUid(target.id)) {
             system.registerDataSet(target.id, target);
         }
@@ -997,7 +992,7 @@ class DataSet {
     getLink(key: string): DataSet | null {
         const link = this.links[key];
         if (!link || !link.raw) return null;
-        return SystemContainer.Get().getDataSetByUid(link.raw);
+        return GameRules.SystemContainer.getDataSetByUid(link.raw);
     }
 
     owned(entity: EntityIndex) {
@@ -1072,19 +1067,15 @@ class DataSet {
 
 // 全局静态系统容器
 export class SystemContainer {
-    private static instance: SystemContainer;
     public dataSets: Map<UID, DataSet> = new Map();
     private tagIndex: Map<TagName, Set<UID>> = new Map();
     private tagsCombinationIndex: TupleKeyMap<TagName[], Set<UID>> = new TupleKeyMap();
 
-    private constructor() { }
+    constructor() { 
 
-    static Get(): SystemContainer {
-        if (!SystemContainer.instance) {
-            SystemContainer.instance = new SystemContainer();
-        }
-        return SystemContainer.instance;
     }
+
+   
 
     toJSON(): any {
         return {
@@ -1211,7 +1202,7 @@ class DataSetArr {
         this.uids.add(uid);
 
         // 更新数组缓存
-        const ds = SystemContainer.Get().getDataSetByUid(uid);
+        const ds = GameRules.SystemContainer.getDataSetByUid(uid);
         if (ds) {
             this._arr.push(ds);
         }
@@ -1234,7 +1225,7 @@ class DataSetArr {
                 // 确保数据集使用我们生成的UID
 
                 // 注册到系统容器
-                SystemContainer.Get().registerDataSet(uid, ds);
+                GameRules.SystemContainer.registerDataSet(uid, ds);
 
                 // 添加到集合
                 this.add(uid);
@@ -1250,7 +1241,7 @@ class DataSetArr {
                 this.uids.add(uid);
 
                 // 更新数组缓存
-                const ds = SystemContainer.Get().getDataSetByUid(uid);
+                const ds = GameRules.SystemContainer.getDataSetByUid(uid);
                 if (ds) {
                     this._arr.push(ds);
                 }
@@ -1564,7 +1555,7 @@ function find(
         searchSet = scope;
     } else {
         // 默认搜索全局所有数据集
-        const system = SystemContainer.Get();
+        const system = GameRules.SystemContainer;
         searchSet = Array.from(system.dataSets.values());
     }
 
@@ -1799,7 +1790,7 @@ export function test() {
         print("当前我的entity",entindex)
     })
 
-    UnitTimerSystem.Get().add({
+    GameRules.UnitTimerSystem.add({
         interval:5,
         entityId:HeroList.GetHero(0).entindex(),
         fnName:"ttt",

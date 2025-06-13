@@ -2,12 +2,15 @@ import { Debug } from './Debug';
 import { GameConfig } from './GameConfig';
 import { XNetTable } from '../utils/xnet-table';
 import { UIDManager } from '../cryso/snapshot';
+import { SystemContainer, UnitTimerSystem } from '../cryso/structs';
 
 declare global {
     interface CDOTAGameRules {
         // 声明所有的GameRules模块，这个主要是为了方便其他地方的引用（保证单例模式）
         XNetTable: XNetTable;
         UIDManager:UIDManager
+        SystemContainer:SystemContainer
+        UnitTimerSystem:UnitTimerSystem
     }
 }
 
@@ -25,5 +28,7 @@ export function ActivateModules() {
         new Debug();
 
         GameRules.UIDManager = new UIDManager()
+        GameRules.SystemContainer = new SystemContainer()
+        
     }
 }
