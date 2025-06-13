@@ -330,6 +330,8 @@ export class ModifierSnapshot {
             parentUidPtr.link.owned = modifier.GetParent().entindex()
             parentUidPtr.link.caster = caster.entindex()
 
+            print("当前记录的modifier",this.name)
+
             if (parentUidPtr == null) {
                 print("当前的Parent没有uid")
                 return
@@ -589,8 +591,13 @@ export class AbilityOrItemSnapshot {
                     owned.SwapAbilities(owned.GetAbilityByIndex(this.data.slot).GetAbilityName(), ability.GetName(), false, false)
                     ability.SetHidden(this.data.isHidden)
                 }
+                this.ptrUid.newEntityindex = ability.entindex()
+                GameRules.UIDManager.newEntityRegister(ability.entindex(),this.ptrUid)
             }
             print("当前值得", owned.GetAbilityByIndex(this.data.slot)?.GetAbilityName())
+
+            this.ptrUid.newEntityindex = ability.entindex()
+
 
             ability.SetLevel(this.data.level)
             ability.StartCooldown(this.data.cooldown)
@@ -1540,11 +1547,9 @@ export function SaveGameState() {
                 const snap = EntitySnapshot.build().Precapture(ent)
                 if(snap.getData().PlayerID != -1 && botlist[snap.getData().PlayerID] == null && snap.getData().is_bot != true){
                     heroConatiner_ptr.push(snap)
-                    return
                 }
                 if(snap.getData().is_bot){
                     bot_ptr.push(snap)
-                    return
                 }
                 container_ptr.push(snap)
             }
@@ -1554,7 +1559,6 @@ export function SaveGameState() {
         })
 
     container_ptr.forEach(snap => {
-
         snap.Postcapture()
     })
 
